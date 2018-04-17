@@ -3250,6 +3250,12 @@ p {
 		return true;
 	}
 
+	public static function update_disconnection_notice( $user_id ) {
+		$notice = (array) Jetpack_Options::get_option( 'disconnection_notice' );
+		$notice = array_merge( $notice, array( $user_id ) );
+		Jetpack_Options::update_option( 'disconnection_notice', $notice );
+	}
+
 	public static function unlink_user_on_unknown_token( $user_id ) {
 		$master_user = (int) Jetpack_Options::get_option( 'master_user' );
 		if ( $user_id == 0 || $user_id == JETPACK_MASTER_USER ) {
@@ -3261,6 +3267,7 @@ p {
 		Jetpack_Options::update_option( 'user_tokens', $tokens );
 
 		if ( $user_id !== $master_user ) {
+			self::update_disconnection_notice( $user_id );
 			return;
 		}
 		// try to demote master user
@@ -3269,8 +3276,10 @@ p {
 
 		// delete all the tokens
 		if ( $master_user !== Jetpack_Options::get_option( 'master_user' ) ) {
+			self::update_disconnection_notice( $user_id );
 			return;
 		}
+		Jetpack_Options::update_option( 'disconnection_notice', $tokens );
 		Jetpack_Options::delete_option( 'user_tokens' );
 		Jetpack_Options::delete_option( 'master_user' );
 		Jetpack_Options::delete_option( 'blog_token' );
